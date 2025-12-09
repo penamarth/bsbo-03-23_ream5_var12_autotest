@@ -10,7 +10,6 @@ from services import TestController, EnvironmentManager, ResourceManager, Report
 
 
 class TestAutomationSystemDemo:
-    """Демонстрация работы системы автоматического тестирования"""
     
     def __init__(self):
         self.users = []
@@ -19,10 +18,7 @@ class TestAutomationSystemDemo:
         self.sessions = []
         
     def run_demo(self):
-        """Запуск демонстрации"""
-        print("=" * 70)
-        print("ДЕМОНСТРАЦИЯ СИСТЕМЫ АВТОМАТИЧЕСКОГО ТЕСТИРОВАНИЯ")
-        print("=" * 70)
+        print("[ДЕМОНСТРАЦИЯ СИСТЕМЫ АВТОМАТИЧЕСКОГО ТЕСТИРОВАНИЯ]")
         
         try:
             self.demo_setup_users()
@@ -33,9 +29,7 @@ class TestAutomationSystemDemo:
             self.demo_resource_management()
             self.demo_system_statistics()
             
-            print("\n" + "=" * 70)
-            print("ДЕМОНСТРАЦИЯ УСПЕШНО ЗАВЕРШЕНА!")
-            print("=" * 70)
+            print("[ДЕМОНСТРАЦИЯ УСПЕШНО ЗАВЕРШЕНА!]")
             
         except Exception as e:
             print(f"\nОшибка во время демонстрации: {e}")
@@ -43,7 +37,6 @@ class TestAutomationSystemDemo:
             traceback.print_exc()
     
     def demo_setup_users(self):
-        """Демонстрация настройки пользователей"""
         print("\n1. НАСТРОЙКА ПОЛЬЗОВАТЕЛЕЙ")
         print("-" * 40)
         
@@ -76,11 +69,11 @@ class TestAutomationSystemDemo:
             print(f"  Разрешения: {', '.join(user.permissions)}")
     
     def demo_setup_environments(self):
-        """Демонстрация настройки тестовых сред"""
         print("\n2. НАСТРОЙКА ТЕСТОВЫХ СРЕД")
         print("-" * 40)
         
-        env_manager = EnvironmentManager()
+        env_manager = EnvironmentManager.get_instance()
+        
         dev_config = {
             "db_host": "localhost",
             "db_port": 5432,
@@ -116,11 +109,10 @@ class TestAutomationSystemDemo:
             print(f"  Конфигурация: {list(env.config.keys())}")
     
     def demo_create_test_cases(self):
-        """Демонстрация создания тест-кейсов"""
         print("\n3. СОЗДАНИЕ ТЕСТ-КЕЙСОВ И ТЕСТ-СЬЮТОВ")
         print("-" * 40)
         
-        developer = self.users[0] 
+        developer = self.users[0]
         
         test_cases = [
             developer.create_test_case(
@@ -191,19 +183,17 @@ class TestAutomationSystemDemo:
             print(f"    Категория: {suite.category}")
     
     def demo_run_test_session(self):
-        """Демонстрация запуска тестовой сессии"""
         print("\n4. ЗАПУСК ТЕСТОВОЙ СЕССИИ")
         print("-" * 40)
         
         developer = self.users[0]
-        test_suite = self.test_suites[0] 
-        environment = self.environments[1] 
+        test_suite = self.test_suites[0]
+        environment = self.environments[1]
         
         print(f"Запуск тестовой сессии:")
         print(f"  Разработчик: {developer.name}")
         print(f"  Тест-сьют: {test_suite.name}")
         print(f"  Среда: {environment.env_id} ({environment.type.value})")
-        
         
         controller = TestController.get_instance()
         session = controller.start_test_session(test_suite, environment, developer.user_id)
@@ -222,7 +212,6 @@ class TestAutomationSystemDemo:
             print(f"  Отчет сгенерирован: {session.report.report_id}")
     
     def demo_report_generation(self):
-        """Демонстрация генерации отчетов"""
         print("\n5. ГЕНЕРАЦИЯ И ПРОСМОТР ОТЧЕТОВ")
         print("-" * 40)
         
@@ -260,12 +249,11 @@ class TestAutomationSystemDemo:
             print(f"  Статистика: {report_details['statistics']}")
     
     def demo_resource_management(self):
-        """Демонстрация управления ресурсами"""
         print("\n6. УПРАВЛЕНИЕ РЕСУРСАМИ")
         print("-" * 40)
         
-        resource_manager = ResourceManager()
-        env_manager = EnvironmentManager()
+        resource_manager = ResourceManager.get_instance()
+        env_manager = EnvironmentManager.get_instance()
         
         utilization = resource_manager.get_resource_utilization()
         print("Статистика использования ресурсов:")
@@ -274,7 +262,6 @@ class TestAutomationSystemDemo:
         print(f"  Доступно: {utilization['available']}")
         print(f"  Загрузка: {utilization['utilization_percent']:.1f}%")
         
-
         print("\nЗапрос нового ресурса:")
         new_resource = resource_manager.request_resource(
             ResourceType.VM,
@@ -291,17 +278,16 @@ class TestAutomationSystemDemo:
         available_envs = env_manager.get_available_environments()
         print(f"\nДоступные тестовые среды: {len(available_envs)}")
         
-        for env in available_envs[:2]: 
+        for env in available_envs[:2]:
             print(f"  - {env.env_id}: {env.type.value} ({len(env.resources)} ресурсов)")
     
     def demo_system_statistics(self):
-        """Демонстрация статистики системы"""
         print("\n7. СТАТИСТИКА СИСТЕМЫ")
         print("-" * 40)
         
         controller = TestController.get_instance()
-        env_manager = EnvironmentManager()
-        resource_manager = ResourceManager()
+        env_manager = EnvironmentManager.get_instance()
+        resource_manager = ResourceManager.get_instance()
         report_service = ReportService()
         
         controller_stats = controller.get_statistics()
@@ -335,7 +321,6 @@ class TestAutomationSystemDemo:
 
 
 def main():
-    """Основная функция"""
     demo = TestAutomationSystemDemo()
     demo.run_demo()
 

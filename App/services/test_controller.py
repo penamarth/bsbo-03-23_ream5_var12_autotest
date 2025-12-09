@@ -29,7 +29,6 @@ class TestController:
     
     @classmethod
     def get_instance(cls):
-        """Получение экземпляра синглтона"""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
@@ -37,7 +36,6 @@ class TestController:
     def start_test_session(self, test_suite: TestSuite, 
                           environment: Environment,
                           initiated_by: str = "") -> TestSession:
-        """Запуск тестовой сессии"""
         print(f"TestController: запуск тестовой сессии для сьюта {test_suite.name}")
         
         if not environment.is_available():
@@ -51,7 +49,7 @@ class TestController:
         try:
             resource_manager = ResourceManager()
             session.metadata['resource_manager'] = resource_manager.get_statistics()
-
+            
             runner = TestRunner()
             print(f"Выполнение тестов сьюта {test_suite.name}...")
             
@@ -61,7 +59,7 @@ class TestController:
             
             session.metadata['test_runner_stats'] = runner.get_stats()
             
-            report_gen = ReportGenerator()
+            report_gen = ReportGenerator.get_instance()
             session.report = report_gen.generate_report(session)
             
             session.complete(SessionStatus.COMPLETED)
@@ -93,7 +91,6 @@ class TestController:
             raise
     
     def stop_test_session(self, session_id: str) -> bool:
-        """Остановка тестовой сессии"""
         session = self._active_sessions.get(session_id)
         
         if not session:
@@ -108,7 +105,7 @@ class TestController:
         resource_manager = ResourceManager()
         resources_freed = resource_manager.release_session_resources(session_id)
         session.metadata['resources_freed_on_cancel'] = resources_freed
-    
+        
         self._active_sessions.pop(session_id, None)
         self._completed_sessions[session_id] = session
         self._statistics['cancelled_sessions'] += 1
@@ -117,7 +114,6 @@ class TestController:
         return True
     
     def get_session_by_id(self, session_id: str) -> Optional[TestSession]:
-        """Получение сессии по ID"""
         session = self._active_sessions.get(session_id)
         if session:
             return session
@@ -125,37 +121,30 @@ class TestController:
         return self._completed_sessions.get(session_id)
     
     def get_session_report(self, session_id: str) -> Optional[TestReport]:
-        """Получение отчета по сессии"""
         session = self.get_session_by_id(session_id)
         if session:
             return session.report
         return None
     
     def get_all_sessions(self) -> List[TestSession]:
-        """Получение всех сессий"""
         all_sessions = list(self._active_sessions.values()) + list(self._completed_sessions.values())
         return sorted(all_sessions, key=lambda s: s.start_time, reverse=True)
     
     def get_active_sessions(self) -> List[TestSession]:
-        """Получение активных сессий"""
         return list(self._active_sessions.values())
     
     def get_completed_sessions(self) -> List[TestSession]:
-        """Получение завершенных сессий"""
         return list(self._completed_sessions.values())
     
     def get_sessions_by_user(self, user_id: str) -> List[TestSession]:
-        """Получение сессий по пользователю"""
         all_sessions = self.get_all_sessions()
         return [session for session in all_sessions if session.initiated_by == user_id]
     
     def get_sessions_by_status(self, status: SessionStatus) -> List[TestSession]:
-        """Получение сессий по статусу"""
         all_sessions = self.get_all_sessions()
         return [session for session in all_sessions if session.status == status.value]
     
     def cleanup_old_sessions(self, max_age_days: int = 30) -> int:
-        """Очистка старых сессий"""
         from datetime import datetime, timedelta
         
         cleanup_time = datetime.now() - timedelta(days=max_age_days)
@@ -174,7 +163,6 @@ class TestController:
         return removed_count
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Получение статистики контроллера"""
         active_sessions = len(self._active_sessions)
         completed_sessions = len(self._completed_sessions)
         

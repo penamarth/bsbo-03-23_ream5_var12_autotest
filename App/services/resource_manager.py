@@ -6,14 +6,13 @@ from models.environment import Resource
 
 
 class ResourceManager:
-    """Управление ресурсами"""
     _instance = None
     
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._resources = {}
-            cls._instance._allocations = {}  # session_id -> [resource_ids]
+            cls._instance._allocations = {}
             cls._instance._statistics = {
                 'total_allocations': 0,
                 'active_allocations': 0,
@@ -23,7 +22,6 @@ class ResourceManager:
     
     @classmethod
     def get_instance(cls):
-        """Получение экземпляра синглтона"""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
@@ -31,7 +29,6 @@ class ResourceManager:
     def request_resource(self, resource_type: ResourceType, 
                          capacity: Optional[Dict[str, Any]] = None,
                          session_id: Optional[str] = None) -> Optional[Resource]:
-        """Запрос ресурса"""
         print(f"ResourceManager: запрос ресурса типа {resource_type.value}")
         
         for resource in self._resources.values():
@@ -68,7 +65,6 @@ class ResourceManager:
     
     def _create_resource(self, resource_type: ResourceType, 
                         capacity: Optional[Dict[str, Any]] = None) -> Resource:
-        """Создание нового ресурса"""
         resource_id = f"{resource_type.value[:3]}-{str(uuid.uuid4())[:8]}"
         resource = Resource(resource_id, resource_type.value)
         
@@ -94,7 +90,6 @@ class ResourceManager:
         return resource
     
     def release_resource(self, resource: Resource, session_id: Optional[str] = None) -> None:
-        """Освобождение ресурса"""
         resource.release()
         
         if session_id and session_id in self._allocations:
@@ -105,11 +100,10 @@ class ResourceManager:
         print(f"Ресурс {resource.resource_id} освобожден")
     
     def release_session_resources(self, session_id: str) -> int:
-        """Освобождение всех ресурсов сессии"""
         released_count = 0
         
         if session_id in self._allocations:
-            for resource_id in self._allocations[session_id][:]:  # Копия списка
+            for resource_id in self._allocations[session_id][:]:
                 resource = self._resources.get(resource_id)
                 if resource:
                     self.release_resource(resource, session_id)
@@ -121,38 +115,32 @@ class ResourceManager:
         return released_count
     
     def check_availability(self, resource_type: ResourceType, count: int = 1) -> bool:
-        """Проверка доступности ресурсов"""
         available = sum(
             1 for r in self._resources.values() 
             if r.type == resource_type.value and r.status == ResourceStatus.AVAILABLE.value
         )
         return available >= count
     
-    def get_resource_utilization(self) -> Dict[str, float]:
-        """Получение статистики использования ресурсов"""
+    def get_resource_utilization(self) -> Dict[str, Any]:
         total = len(self._resources)
-        if total == 0:
-            return {'utilization': 0.0}
-        
         allocated = sum(
             1 for r in self._resources.values() 
             if r.status == ResourceStatus.ALLOCATED.value
         )
+        available = total - allocated
+        utilization = (allocated / total * 100) if total > 0 else 0.0
         
-        utilization = (allocated / total) * 100
         return {
             'total_resources': total,
             'allocated': allocated,
-            'available': total - allocated,
+            'available': available,
             'utilization_percent': utilization
         }
     
     def get_resources_by_type(self, resource_type: ResourceType) -> List[Resource]:
-        """Получение ресурсов по типу"""
         return [r for r in self._resources.values() if r.type == resource_type.value]
     
     def get_session_resources(self, session_id: str) -> List[Resource]:
-        """Получение ресурсов, выделенных для сессии"""
         resource_ids = self._allocations.get(session_id, [])
         resources = []
         
@@ -164,17 +152,19 @@ class ResourceManager:
         return resources
     
     def register_existing_resource(self, resource: Resource) -> None:
-        """Регистрация существующего ресурса в менеджере"""
         if resource.resource_id not in self._resources:
             self._resources[resource.resource_id] = resource
             self._statistics['total_resources'] += 1
             print(f"Ресурс {resource.resource_id} зарегистрирован в ResourceManager")
     
     def get_statistics(self) -> Dict[str, Any]:
-        """Получение статистики менеджера ресурсов"""
+        utilization = self.get_resource_utilization()
         return {
             **self._statistics,
             'resource_count': len(self._resources),
             'active_sessions': len(self._allocations),
-            'utilization': self.get_resource_utilization()
+            'total_resources': utilization['total_resources'],
+            'allocated': utilization['allocated'],
+            'available': utilization['available'],
+            'utilization_percent': utilization['utilization_percent']
         }
