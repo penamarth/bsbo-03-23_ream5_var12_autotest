@@ -17,7 +17,7 @@ class TestCase:
         self.updated_at = datetime.now()
         self.tags: List[str] = []
         self.dependencies: List[str] = []
-        self.timeout: int = 30  # секунд по умолчанию
+        self.timeout: int = 30 
     
     def execute(self, environment) -> 'TestResult':
         """Выполнение тест-кейса"""
